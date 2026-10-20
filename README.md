@@ -1,6 +1,7 @@
-Bài 2 — Đọc và kiểm tra cảm biến
-Họ tên: Đoàn Trung Bảo · MSSV: 23110153 
 
+## Họ tên: Đoàn Trung Bảo · MSSV: 23110153 
+
+## Bài 2 — Đọc và kiểm tra cảm biến
 ## File trong repo này
 - sensor_delay.ino — bản dùng delay()
 - sensor_millis.ino — bản dùng millis()
