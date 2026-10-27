@@ -8,16 +8,9 @@
 - data.csv — dữ liệu gốc (timestamp, raw, converted, unit, valid)
 - chart.png — biểu đồ trước/sau lọc
 
-## 4.1 Cấu hình (setup)
-...trả lời đầy đủ...
-
-## 4.2 Cách báo lỗi
-...dán 1 dòng log thật...
-
-## 4.3 Bộ lọc đã chọn
-...
-
-## 4.4 Kết quả thí nghiệm lập lịch
-...
-
-## 4.5 Đóng góp cá nhân
+## Bài 3 — Điều khiển thiết bị an toàn
+## File trong repo này
+- control.ino — firmware máy trạng thái DỪNG/CHẠY/LỖI (có ISR + timer)
+- fsm_diagram.png — sơ đồ trạng thái
+- test_case_1.mp4 / test_case_2.mp4 / test_case_3.mp4 — video 3 ca thử trên mô hình nhà kính
+- serial_log.txt — log Serial của cả 3 ca
