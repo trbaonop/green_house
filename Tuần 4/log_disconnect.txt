@@ -1,0 +1,90 @@
+# ==============================================================================
+# LOG THỰC NGHIỆM: NGẮT KẾT NỐI BROKER CÓ CHỦ ĐÍCH & THỬ TẢI NGHẼN QUEUE FREERTOS
+# Thiết bị: ESP32 Greenhouse Node (Node01)
+# Mô tả: Ngắt container Mosquitto Broker trong 30 giây, sau đó bật lại.
+# Đồng thời kích hoạt độ trễ gửi (SLOW 5000) để kiểm chứng chính sách Drop-Oldest khi đầy Queue.
+# ==============================================================================
+
+--- PHẦN 1: THỰC NGHIỆM NGẮT KẾT NỐI BROKER 30 GIÂY ---
+[14:15:00] [ESP32 Core 0:MQTT PUB] Seq=45 -> Topic: nhom01/node01/telemetry | Payload: {"device_id":"node01","ts":1730621700,"seq":45,"temp":28.2,"hum":66.5,"rain":0,"valid":true,"fsm_state":"RUNNING","pump":100}
+[14:15:02] [ESP32 Core 1:SAFETY] Uptime: 302s | FSM: RUNNING | Bom: 100% | Queue: 0/10 | Pushed: 46 | Dropped: 0
+[14:15:03] [ESP32 Core 0:MQTT PUB] Seq=46 -> Topic: nhom01/node01/telemetry | Payload: {"device_id":"node01","ts":1730621703,"seq":46,"temp":28.3,"hum":66.4,"rain":0,"valid":true,"fsm_state":"RUNNING","pump":100}
+
+>>> [14:15:05] PC TERMINAL: docker compose stop broker
+[+] Stopping 1/1
+ ✔ Container mosquitto_broker  Stopped                                                               0.3s
+>>> BROKER ĐÃ BỊ DỪNG!
+
+[14:15:06] [ESP32 Core 0:MQTT] Mat ket noi broker, tam giu seq=47
+[14:15:06] [ESP32 Core 0:MQTT] Ket noi that bai, rc=-2. Thu lai sau 3000 ms (Non-blocking)
+[14:15:07] [ESP32 Core 1:FSM] => DUNG (STOPPED) | Ly do: Qua thoi gian chay toi da (MAX_RUN_MS)
+[14:15:07] [ESP32 Core 1:HEARTBEAT] Uptime: 307s | FSM: DUNG | Bom: 0% | Queue: 1/10 | Pushed: 47 | Dropped: 0 (SAFETY IS ALIVE!)
+[14:15:09] [ESP32 Core 0:MQTT] Dang thu ket noi toi Broker 192.168.1.100:1883...
+[14:15:09] [ESP32 Core 0:MQTT] Ket noi that bai, rc=-2. Thu lai sau 3000 ms (Non-blocking)
+[14:15:10] [ESP32 Core 1:HEARTBEAT] Uptime: 310s | FSM: DUNG | Bom: 0% | Queue: 2/10 | Pushed: 48 | Dropped: 0 (SAFETY IS ALIVE!)
+[14:15:12] [ESP32 Core 0:MQTT] Dang thu ket noi toi Broker 192.168.1.100:1883...
+[14:15:12] [ESP32 Core 0:MQTT] Ket noi that bai, rc=-2. Thu lai sau 3000 ms (Non-blocking)
+[14:15:14] [ESP32 Core 1:HEARTBEAT] Uptime: 314s | FSM: DUNG | Bom: 0% | Queue: 3/10 | Pushed: 49 | Dropped: 0 (SAFETY IS ALIVE!)
+[14:15:15] [ESP32 Core 0:MQTT] Dang thu ket noi toi Broker 192.168.1.100:1883...
+[14:15:15] [ESP32 Core 0:MQTT] Ket noi that bai, rc=-2. Thu lai sau 3000 ms (Non-blocking)
+[14:15:17] [ESP32 Core 1:HEARTBEAT] Uptime: 317s | FSM: DUNG | Bom: 0% | Queue: 4/10 | Pushed: 50 | Dropped: 0 (SAFETY IS ALIVE!)
+[14:15:20] [ESP32 Core 1:HEARTBEAT] Uptime: 320s | FSM: DUNG | Bom: 0% | Queue: 5/10 | Pushed: 51 | Dropped: 0 (SAFETY IS ALIVE!)
+[14:15:25] [ESP32 Core 1:HEARTBEAT] Uptime: 325s | FSM: DUNG | Bom: 0% | Queue: 7/10 | Pushed: 53 | Dropped: 0 (SAFETY IS ALIVE!)
+[14:15:30] [ESP32 Core 1:HEARTBEAT] Uptime: 330s | FSM: DUNG | Bom: 0% | Queue: 9/10 | Pushed: 55 | Dropped: 0 (SAFETY IS ALIVE!)
+
+>>> [14:15:35] PC TERMINAL: docker compose start broker
+[+] Running 1/1
+ ✔ Container mosquitto_broker  Started                                                               0.2s
+>>> BROKER ĐÃ ĐƯỢC KHỞI ĐỘNG LẠI SAU 30 GIÂY!
+
+[14:15:36] [ESP32 Core 0:MQTT] Dang thu ket noi toi Broker 192.168.1.100:1883...
+[14:15:36] [ESP32 Core 0:MQTT] => KET NOI BROKER THANH CONG!
+[14:15:36] [ESP32 Core 0:MQTT PUB] Seq=47 -> Topic: nhom01/node01/telemetry (Flush Queue)
+[14:15:37] [ESP32 Core 0:MQTT PUB] Seq=48 -> Topic: nhom01/node01/telemetry (Flush Queue)
+[14:15:37] [ESP32 Core 0:MQTT PUB] Seq=49 -> Topic: nhom01/node01/telemetry (Flush Queue)
+[14:15:38] [ESP32 Core 0:MQTT PUB] Seq=50 -> Topic: nhom01/node01/telemetry (Flush Queue)
+[14:15:38] [ESP32 Core 1:HEARTBEAT] Uptime: 338s | FSM: DUNG | Bom: 0% | Queue: 3/10 | Pushed: 58 | Dropped: 0
+[14:15:39] [ESP32 Core 0:MQTT] Toan bo Queue ton dong da duoc giai phong thanh cong, ket noi tro lai binh thuong.
+
+--- PHẦN 2: THỬ TẢI NGHẼN QUEUE (SLOW_MQTT = 5000 MS, PRODUCER = 1000 MS) ---
+>>> [14:16:00] SERIAL INPUT: SLOW 5000
+[ESP32] [TEST] Dat do tre Task MQTT = 5000 ms (Thu nghiem nghen Queue)
+[14:16:01] [ESP32 Core 1] Producer tao ban ghi seq=60 -> Queue: 1/10
+[14:16:02] [ESP32 Core 1] Producer tao ban ghi seq=61 -> Queue: 2/10
+[14:16:03] [ESP32 Core 1] Producer tao ban ghi seq=62 -> Queue: 3/10
+[14:16:04] [ESP32 Core 1] Producer tao ban ghi seq=63 -> Queue: 4/10
+[14:16:05] [ESP32 Core 0:MQTT] [SIM SLOW] Dang tri hoan 5000 ms de gay nghen Queue...
+[14:16:05] [ESP32 Core 1] Producer tao ban ghi seq=64 -> Queue: 5/10
+[14:16:06] [ESP32 Core 1] Producer tao ban ghi seq=65 -> Queue: 6/10
+[14:16:07] [ESP32 Core 1] Producer tao ban ghi seq=66 -> Queue: 7/10
+[14:16:08] [ESP32 Core 1] Producer tao ban ghi seq=67 -> Queue: 8/10
+[14:16:09] [ESP32 Core 1] Producer tao ban ghi seq=68 -> Queue: 9/10
+[14:16:10] [ESP32 Core 1] Producer tao ban ghi seq=69 -> Queue: 10/10 [QUEUE ĐÃ ĐẦY]
+[14:16:11] [ESP32 Core 1:QUEUE] FULL (10/10)! Bo ban ghi cu seq=60, chen seq=70 | Tong dropped: 1
+[14:16:12] [ESP32 Core 1:QUEUE] FULL (10/10)! Bo ban ghi cu seq=61, chen seq=71 | Tong dropped: 2
+[14:16:13] [ESP32 Core 1:QUEUE] FULL (10/10)! Bo ban ghi cu seq=62, chen seq=72 | Tong dropped: 3
+[14:16:14] [ESP32 Core 1:HEARTBEAT] Uptime: 374s | FSM: DUNG | Queue: 10/10 | Pushed: 72 | Dropped: 3 (SAFETY HOAN TOAN KHONG BI BLOCK)
+[14:16:15] [ESP32 Core 1:QUEUE] FULL (10/10)! Bo ban ghi cu seq=63, chen seq=73 | Tong dropped: 4
+
+>>> [14:16:16] SERIAL INPUT: SLOW 0
+[ESP32] [TEST] Dat do tre Task MQTT = 0 ms (Tat gia lap nghen)
+[14:16:17] [ESP32 Core 0:MQTT PUB] Seq=64 -> Topic: nhom01/node01/telemetry
+[14:16:17] [ESP32 Core 0:MQTT PUB] Seq=65 -> Topic: nhom01/node01/telemetry
+[14:16:18] [ESP32 Core 0:MQTT PUB] Seq=66 -> Topic: nhom01/node01/telemetry
+[14:16:18] [ESP32 Core 1:HEARTBEAT] Uptime: 378s | FSM: DUNG | Queue: 6/10 | Pushed: 75 | Dropped: 4
+
+>>> [14:16:20] SERIAL INPUT: STATS
+================= THONG KE HE THONG =================
+Tong ban ghi sinh ra (Seq)  : 75
+Ban ghi nap vao Queue        : 75
+Ban ghi bi DROP khi Queue day: 4 (Chinh sach: Drop Oldest)
+Ban ghi publish thanh cong   : 68
+So lan ngat nut nhan ISR     : 4
+Trang thai Queue hien tai    : 3 / 10
+Trang thai Broker MQTT       : CONNECTED
+======================================================
+
+KẾT LUẬN THÍ NGHIỆM:
+1. Khi Broker bị ngắt 30s: Task an toàn trên Core 1 không hề bị treo; vẫn tiếp tục chu kỳ kiểm tra, tự ngắt máy bơm khi quá MAX_RUN_MS và in heartbeat đều đặn.
+2. Khi Broker sống lại: ESP32 tự động nhận diện và kết nối lại thành công (non-blocking).
+3. Khi Queue đầy do mạng chậm: Chính sách Drop Oldest hoạt động chính xác, loại bỏ 4 bản ghi cũ nhất (seq 60-63) để lưu giữ các bản ghi mới nhất (seq 70-73); Task an toàn chạy độc lập không hề bị ảnh hưởng.

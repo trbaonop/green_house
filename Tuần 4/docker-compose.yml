@@ -1,0 +1,21 @@
+version: '3.8'
+
+services:
+  broker:
+    image: eclipse-mosquitto:2.0.18
+    container_name: mosquitto_broker
+    restart: unless-stopped
+    ports:
+      - "1883:1883"
+      - "9001:9001"
+    volumes:
+      - ./mosquitto/config/mosquitto.conf:/mosquitto/config/mosquitto.conf:ro
+      - ./mosquitto/config/password_file:/mosquitto/config/password_file:ro
+      - mosquitto_data:/mosquitto/data
+      - mosquitto_log:/mosquitto/log
+    environment:
+      - TZ=Asia/Ho_Chi_Minh
+
+volumes:
+  mosquitto_data:
+  mosquitto_log:
