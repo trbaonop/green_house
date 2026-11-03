@@ -1,8 +1,9 @@
+
 # Bài 4 — Gửi dữ liệu qua MQTT
 
 * **Họ tên:** Đoàn Trung Bảo
 * **MSSV:** 23110153
-
+<img width="992" height="564" alt="Ảnh chụp màn hình 2026-11-03 155526" src="https://github.com/user-attachments/assets/fbbbab6c-83e6-469e-857f-d709b1696dd3" />
 ## Thành phần chính
 
 * `docker-compose.yml`, `mosquitto/config/`: cấu hình Broker và xác thực.
