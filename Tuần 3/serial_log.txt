@@ -1,0 +1,80 @@
+[W] boot#12 +137.836s B3 Giu DUNG, tu choi: dang nghi, con 2s
+[E] boot#12 +194.706s B3 FSM DUNG -> LOI: E2 DHT11: doc loi (Uno tra 0x7FFF)
+[W] boot#12 +202.508s B3 Giu LOI, tu choi: dang LOI
+[W] boot#12 +203.156s B3 Giu LOI, tu choi: dang LOI
+[W] boot#12 +204.368s B3 Giu LOI, tu choi: dang LOI
+[I] boot#12 +254.848s B3 FSM LOI -> DUNG: het loi
+[I] boot#12 +260.401s B3 Cau hinh: duty 100%, PWM 100Hz, moi 300ms, toi da 15s, nghi 10s
+[I] boot#12 +264.111s B3 Cau hinh: duty 10%, PWM 100Hz, moi 300ms, toi da 15s, nghi 10s
+[I] boot#12 +271.533s B3 Cau hinh: duty 10%, PWM 100Hz, moi 300ms, toi da 15s, nghi 10s
+[I] boot#12 +278.500s B3 Cau hinh: duty 10%, PWM 100Hz, moi 300ms, toi da 15s, nghi 15s
+[I] boot#12 +279.321s B3 FSM DUNG -> CHAY: lenh chay, duty 10%, toi da 15s
+[I] boot#12 +279.622s B3 Doi duty 100% -> 10%
+[I] boot#12 +294.394s B3 FSM CHAY -> DUNG: het gio 15s, nghi 15s
+[I] boot#12 +297.082s B3 Cau hinh: duty 15%, PWM 100Hz, moi 300ms, toi da 15s, nghi 15s
+[I] boot#12 +298.335s B3 Cau hinh: duty 15%, PWM 100Hz, moi 300ms, toi da 15s, nghi 15s
+[W] boot#12 +300.384s B3 Giu DUNG, tu choi: dang nghi, con 10s
+[W] boot#12 +300.796s B3 Giu DUNG, tu choi: dang nghi, con 9s
+[W] boot#12 +300.989s B3 Giu DUNG, tu choi: dang nghi, con 9s
+[W] boot#12 +301.230s B3 Giu DUNG, tu choi: dang nghi, con 9s
+[W] boot#12 +301.502s B3 Giu DUNG, tu choi: dang nghi, con 8s
+[W] boot#12 +301.749s B3 Giu DUNG, tu choi: dang nghi, con 8s
+[I] boot#12 +310.966s B3 FSM DUNG -> CHAY: lenh chay, duty 15%, toi da 15s
+[I] boot#12 +311.267s B3 Doi duty 100% -> 15%
+[I] boot#12 +326.044s B3 FSM CHAY -> DUNG: het gio 15s, nghi 15s
+[I] boot#12 +332.113s B3 Cau hinh: duty 15%, PWM 100Hz, moi 300ms, toi da 15s, nghi 15s
+[I] boot#12 +338.086s B3 Cau hinh: duty 15%, PWM 100Hz, moi 300ms, toi da 15s, nghi 5s
+[I] boot#12 +341.841s B3 FSM DUNG -> CHAY: lenh chay, duty 15%, toi da 15s
+[I] boot#12 +342.140s B3 Doi duty 100% -> 15%
+[I] boot#12 +356.903s B3 FSM CHAY -> DUNG: het gio 15s, nghi 5s
+[I] boot#12 +431.630s B3 CPU ban 5s (8546 lan doc I2C): ISR ghi nhan 4 lan bam (53 canh xuong)
+[I] boot#12 +493.256s B3 CPU ban 5s (8541 lan doc I2C): ISR ghi nhan 4 lan bam (55 canh xuong)
+[B] boot#13 +0.067s Khoi dong #13: Cap dien (power-on)
+[I] boot#13 +0.176s B3 FSM khoi dong o DUNG (duty 15%, toi da 15s, nghi 5s)
+[B] boot#14 +0.071s Khoi dong #14: Cap dien (power-on)
+[I] boot#14 +0.196s B3 FSM khoi dong o DUNG (duty 15%, toi da 15s, nghi 5s)
+[B] boot#15 +0.077s Khoi dong #15: Cap dien (power-on)
+[I] boot#15 +0.252s B3 FSM khoi dong o DUNG (duty 15%, toi da 15s, nghi 5s)
+[B] boot#16 +0.083s Khoi dong #16: Cap dien (power-on)
+[I] boot#16 +0.255s B3 FSM khoi dong o DUNG (duty 15%, toi da 15s, nghi 5s)
+[B] boot#17 +0.077s Khoi dong #17: Cap dien (power-on)
+[I] boot#17 +0.264s B3 FSM khoi dong o DUNG (duty 15%, toi da 15s, nghi 5s)
+[B] boot#18 +0.087s Khoi dong #18: Cap dien (power-on)
+[I] boot#18 +0.266s B3 FSM khoi dong o DUNG (duty 15%, toi da 15s, nghi 5s)
+[I] boot#18 +94.246s B3 FSM DUNG -> CHAY: lenh chay, duty 15%, toi da 15s
+[I] boot#18 +94.546s B3 Doi duty 100% -> 15%
+[I] boot#18 +97.662s B3 FSM CHAY -> DUNG: lenh dung
+[I] boot#18 +106.244s B3 FSM DUNG -> CHAY: lenh chay, duty 15%, toi da 15s
+[I] boot#18 +106.543s B3 Doi duty 100% -> 15%
+[I] boot#18 +109.951s B3 FSM CHAY -> DUNG: lenh dung
+[I] boot#18 +112.830s B3 Cau hinh: duty 15%, PWM 100Hz, moi 300ms, toi da 15s, nghi 5s
+[I] boot#18 +115.802s B3 Cau hinh: duty 50%, PWM 100Hz, moi 300ms, toi da 15s, nghi 5s
+[I] boot#18 +117.900s B3 FSM DUNG -> CHAY: lenh chay, duty 50%, toi da 15s
+[I] boot#18 +118.243s B3 Doi duty 100% -> 50%
+[I] boot#18 +121.318s B3 FSM CHAY -> DUNG: lenh dung
+[I] boot#18 +666.223s B3 FSM DUNG -> CHAY: lenh chay, duty 50%, toi da 15s
+[I] boot#18 +666.523s B3 Doi duty 100% -> 50%
+[I] boot#18 +676.989s B3 Cau hinh: duty 100%, PWM 100Hz, moi 300ms, toi da 15s, nghi 5s
+[I] boot#18 +677.054s B3 Doi duty 50% -> 100%
+[I] boot#18 +681.307s B3 FSM CHAY -> DUNG: het gio 15s, nghi 5s
+[W] boot#18 +685.025s B3 Giu DUNG, tu choi: dang nghi, con 2s
+[I] boot#18 +689.229s B3 FSM DUNG -> CHAY: lenh chay, duty 100%, toi da 15s
+[I] boot#18 +697.314s B3 FSM CHAY -> DUNG: lenh dung
+[I] boot#18 +913.641s B3 FSM DUNG -> CHAY: lenh chay, duty 100%, toi da 15s
+[I] boot#18 +915.648s B3 FSM CHAY -> DUNG: lenh dung
+[I] boot#18 +948.502s B3 FSM DUNG -> CHAY: lenh chay, duty 100%, toi da 15s
+[I] boot#18 +950.038s B3 FSM CHAY -> DUNG: lenh dung
+[I] boot#18 +2445.891s B3 FSM DUNG -> CHAY: lenh chay, duty 100%, toi da 15s
+[I] boot#18 +2452.554s B3 FSM CHAY -> DUNG: lenh dung
+[I] boot#18 +2485.112s B3 FSM DUNG -> CHAY: lenh chay, duty 100%, toi da 15s
+[I] boot#18 +2500.250s B3 FSM CHAY -> DUNG: het gio 15s, nghi 5s
+[I] boot#18 +2566.516s B3 FSM DUNG -> CHAY: lenh chay, duty 100%, toi da 15s
+[I] boot#18 +2576.616s B3 FSM CHAY -> DUNG: lenh dung
+[B] boot#19 +0.072s Khoi dong #19: Cap dien (power-on)
+[I] boot#19 +0.248s B3 FSM khoi dong o DUNG (duty 100%, toi da 15s, nghi 5s)
+[I] boot#19 +102.950s B3 FSM DUNG -> CHAY: lenh chay, duty 100%, toi da 15s
+[W] boot#19 +103.135s B3 Giu CHAY, tu choi: dang CHAY, khong gia han gio
+[W] boot#19 +103.308s B3 Giu CHAY, tu choi: dang CHAY, khong gia han gio
+[I] boot#19 +106.269s B3 FSM CHAY -> DUNG: lenh dung
+[I] boot#19 +142.295s B3 FSM DUNG -> CHAY: lenh chay, duty 100%, toi da 15s
+[I] boot#19 +157.355s B3 FSM CHAY -> DUNG: het gio 15s, nghi 5s
