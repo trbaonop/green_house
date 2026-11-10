@@ -9,7 +9,6 @@
 * `docker-compose.yml`, `mosquitto/config/`: cấu hình Broker và xác thực.
 * `firmware/`: firmware ESP32 dùng FreeRTOS, Wi-Fi và MQTT.
 * `topic_payload.md`: quy ước topic và payload JSON.
-* `task_queue.png`: sơ đồ task và queue.
 * `log_10min.txt`, `log_disconnect.txt`: kết quả thử nghiệm truyền tin và mất kết nối.
 * `scripts/`: công cụ hỗ trợ cấu hình và tạo sơ đồ.
 
