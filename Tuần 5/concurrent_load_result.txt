@@ -1,0 +1,21 @@
+============================================================
+KẾT QUẢ THÍ NGHIỆM TẢI ĐỒNG THỜI — CSE3069 Bài 5
+Thời điểm: 2026-11-13T12:27:52Z
+============================================================
+
+[Baseline (không có truy vấn nặng)]
+  Không có dữ liệu ghi interval.
+
+[Loaded (có truy vấn nặng liên tục)]
+  Không có dữ liệu ghi interval.
+  Avg heavy query:    0.2ms  (n=120)
+
+--- So sánh ---
+  Không đủ dữ liệu để so sánh.
+
+--- Giải thích thiết kế ---
+  Service ingest_service.py dùng kết nối DB riêng (write_conn).
+  Script truy vấn nặng dùng kết nối riêng (heavy_conn).
+  SQLite WAL mode: reader không block writer và ngược lại.
+  → Tải đọc không làm chậm ghi trong điều kiện thử nghiệm này.
+============================================================
