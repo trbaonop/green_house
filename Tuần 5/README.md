@@ -157,10 +157,9 @@ GROUP  BY device_id;
 | **Tần suất truy vấn nặng** | 0 | 60 lần / 30s | — |
 | **Độ trễ truy vấn nặng trung bình** | — | **0.27 ms** | — |
 
-PS C:\Users\Admin\Documents\PlatformIO\Projects\highline> python query_timerange.py --device node01 --t0 1794298793 --t1 1794298912 --save chart.png
+* PS C:\Users\Admin\Documents\PlatformIO\Projects\highline> python query_timerange.py --device node01 --t0 1794298793 --t1 1794298912 --save chart.png
 
-============================================================
-Truy vấn: device=node01  T0=2026-11-10T08:19:53Z  T1=2026-11-10T08:21:52Z
+### Truy vấn: device=node01  T0=2026-11-10T08:19:53Z  T1=2026-11-10T08:21:52Z
 Số bản ghi: 120
   Hợp lệ (valid=1):   119
   Không hợp lệ:        1
@@ -168,12 +167,11 @@ Số bản ghi: 120
   seq min..max:        1..120
 ============================================================
 
-5 bản ghi đầu:
-  seq=   1  ts=08:19:53  temp=26.0°C  hum=61.7%  valid=✓  suspect=-
-  seq=   2  ts=08:19:54  temp=26.8°C  hum=68.6%  valid=✓  suspect=-
-  seq=   3  ts=08:19:55  temp=33.8°C  hum=68.8%  valid=✓  suspect=-
-  seq=   4  ts=08:19:56  temp=24.8°C  hum=57.4%  valid=✓  suspect=-
-  seq=   5  ts=08:19:57  temp=33.7°C  hum=82.5%  valid=✓  suspect=-
+*5 bản ghi đầu:
+ * seq=   1  ts=08:19:53  temp=26.0°C  hum=61.7%  valid=✓  suspect=-
+*  seq=   2  ts=08:19:54  temp=26.8°C  hum=68.6%  valid=✓  suspect=-
+* seq=   3  ts=08:19:55  temp=33.8°C  hum=68.8%  valid=✓  suspect=-*  seq=   4  ts=08:19:56  temp=24.8°C  hum=57.4%  valid=✓  suspect=-
+*  seq=   5  ts=08:19:57  temp=33.7°C  hum=82.5%  valid=✓  suspect=-
   ... (115 bản ghi nữa)
 
 
