@@ -5,6 +5,10 @@
 * **Học phần:** CSE3069 — Phát triển ứng dụng IoT (Tuần 10 - TH05)
 * **Kế thừa:** Tiếp nối hệ thống trạm đo và gửi MQTT từ Bài 4
 
+  <img width="1784" height="1070" alt="chart" src="https://github.com/user-attachments/assets/c378720f-b099-4ac2-8930-bf38ba05a94f" />
+  <img width="1008" height="424" alt="Ảnh chụp màn hình 2026-11-13 194507" src="https://github.com/user-attachments/assets/4df0f578-0366-4407-8fcd-2b344bc1e4bf" />
+
+
 ---
 
 ## File trong repo này
@@ -29,13 +33,6 @@
 ## Hướng dẫn chạy hệ thống
 
 ### 1. Nạp Firmware ESP32 (Greenhouse Node)
-Dự án PlatformIO chuẩn hóa sử dụng trực tiếp `src/main.cpp`:
-1. Mở thư mục dự án `highline` trong VS Code.
-2. Kiểm tra thông tin Wi-Fi và IP Broker trong file `include/config.h`:
-   - `WIFI_SSID`: Tên mạng Wi-Fi (ví dụ `"VJU Office"`).
-   - `WIFI_PASSWORD`: Mật khẩu Wi-Fi.
-   - `MQTT_BROKER_IP`: Địa chỉ IP máy tính chạy Broker (ví dụ `"172.16.49.46"`).
-3. Kết nối ESP32 vào cổng USB và nhấn nút **Upload** (PlatformIO: Upload) để nạp code `src/main.cpp`.
 
 ### 2. Khởi động MQTT Broker (Mosquitto)
 ```bash
@@ -97,11 +94,7 @@ Hệ thống tuân thủ chặt chẽ các quy chuẩn kiểm duyệt dữ liệ
    - Giá trị `0` là một số đo vật lý hoàn toàn hợp lệ (ví dụ: nhiệt độ $0.0^\circ\text{C}$, hoặc cảm biến mưa trạng thái `0` nghĩa là trời khô ráo).
    - Giá trị `null` biểu thị tình trạng mất kết nối cảm biến (I2C NACK / cảm biến DHT lỗi đọc ra `NaN`). Khi đó, firmware gửi `temp: null, hum: null, valid: false`. Service chấp nhận lưu bản ghi này vào cơ sở dữ liệu với `valid = 0`, tuyệt đối không tự ý gán về `0`.
 
-3. **Xử lý giá trị ngoài dải đo hợp lý (Bản ghi nghi ngờ - Suspect):**
-   - Ngưỡng hợp lý: Nhiệt độ $[-40^\circ\text{C}, 100^\circ\text{C}]$, độ ẩm $[0\%, 100\%]$, công suất bơm $[0, 100\%]$.
-   - Nếu cảm biến trả về giá trị bất thường (ví dụ: $temp = 105.0^\circ\text{C}$) $\rightarrow$ Đánh dấu cờ `suspect = 1`, giữ nguyên giá trị thật đo được vào DB, **không tự ý sửa thành giá trị khác**.
-
-4. **Quy tắc khử bản ghi trùng (Deduplication):**
+3. **Quy tắc khử bản ghi trùng (Deduplication):**
    - Khóa duy nhất xác định trùng: Tổ hợp `(device_id, ts, seq)`.
    - Chiến lược lựa chọn: **Giữ lại bản ghi đầu tiên đến**, bỏ qua bản ghi đến sau nếu trùng khóa (phù hợp với cơ chế QoS 1 retry hoặc gửi bù).
 
@@ -120,20 +113,6 @@ Hệ thống tuân thủ chặt chẽ các quy chuẩn kiểm duyệt dữ liệ
   "pump": 100
 }
 ```
-*Đánh giá:* Đầy đủ trường, số đo nằm trong ngưỡng cho phép, `valid = true` $\rightarrow$ Lưu vào bảng `telemetry` với `valid = 1, suspect = 0`.
-
-### Minh chứng bản ghi bị từ chối:
-```json
-{
-  "ts": 1794298795,
-  "seq": 106,
-  "temp": 28.0,
-  "hum": 60.0
-}
-```
-*Lý do từ chối:* `Thiếu trường bắt buộc: {'device_id', 'valid'}`. Hệ thống ghi vào bảng `rejected_records`.
-
----
 
 ## 4.2 Kết quả truy vấn trước/sau restart
 
@@ -178,19 +157,23 @@ GROUP  BY device_id;
 | **Tần suất truy vấn nặng** | 0 | 60 lần / 30s | — |
 | **Độ trễ truy vấn nặng trung bình** | — | **0.27 ms** | — |
 
-### Phân tích và Giải pháp tách tải:
-1. **Hiện tượng quan sát được:** Dưới tải truy vấn nặng lặp lại liên tục, độ trễ ghi bản ghi mới tăng nhẹ từ $2.69\,\text{ms}$ lên $4.81\,\text{ms}$ (tăng $79\%$), xuất hiện một số thời điểm trễ tối đa đạt $\approx 62\,\text{ms}$ do cơ chế kiểm tra checkpoint của SQLite WAL. Tuy nhiên, so với chu kỳ phát tin của trạm đo ESP32 ($2000\,\text{ms}$), độ trễ ghi $< 5\,\text{ms}$ là hoàn toàn an toàn, **không làm nghẽn hàng đợi (Queue) hay gây rớt gói tin MQTT**.
-2. **Kiến trúc tách tải đã áp dụng:**
-   - **Tách riêng Connection:** `ingest_service.py` nắm giữ một kết nối ghi độc quyền (`write_conn`) kèm cơ chế khóa luồng `threading.Lock`. Các tác vụ phân tích/đọc sử dụng kết nối riêng biệt (`read_conn`).
-   - **Chế độ WAL Mode:** Cho phép các luồng Reader đọc đồng thời mà không chặn luồng Writer và ngược lại.
-3. **Đề xuất nâng cấp khi mở rộng:** Khi hệ thống mở rộng lên hàng chục trạm đo với tần suất cao, giải pháp tối ưu là chuyển sang kiến trúc Client-Server DB (PostgreSQL / TimescaleDB) với Connection Pool tách biệt hoàn toàn giữa cổng Ingest và cổng Dashboard Analytics.
+PS C:\Users\Admin\Documents\PlatformIO\Projects\highline> python query_timerange.py --device node01 --t0 1794298793 --t1 1794298912 --save chart.png
 
----
+============================================================
+Truy vấn: device=node01  T0=2026-11-10T08:19:53Z  T1=2026-11-10T08:21:52Z
+Số bản ghi: 120
+  Hợp lệ (valid=1):   119
+  Không hợp lệ:        1
+  Nghi ngờ (suspect):  1
+  seq min..max:        1..120
+============================================================
 
-## 4.4 Đóng góp cá nhân
+5 bản ghi đầu:
+  seq=   1  ts=08:19:53  temp=26.0°C  hum=61.7%  valid=✓  suspect=-
+  seq=   2  ts=08:19:54  temp=26.8°C  hum=68.6%  valid=✓  suspect=-
+  seq=   3  ts=08:19:55  temp=33.8°C  hum=68.8%  valid=✓  suspect=-
+  seq=   4  ts=08:19:56  temp=24.8°C  hum=57.4%  valid=✓  suspect=-
+  seq=   5  ts=08:19:57  temp=33.7°C  hum=82.5%  valid=✓  suspect=-
+  ... (115 bản ghi nữa)
 
-Sinh viên tự thực hiện toàn bộ các nội dung của Bài 5:
-1. **Thiết kế cơ sở dữ liệu:** Xây dựng schema chuẩn hóa cho dữ liệu nhà kính (`schema.sql`), tạo bảng cách ly bản ghi sai (`rejected_records`), đánh chỉ mục tối ưu truy vấn thời gian.
-2. **Phát triển Ingest Service:** Viết trọn vẹn `ingest/ingest_service.py` bằng Python và Paho-MQTT, hiện thực đầy đủ thuật toán kiểm tra tính hợp lệ, phát hiện `null` vs `0`, lọc bản ghi nghi ngờ và chống trùng lặp.
-3. **Tích hợp Firmware ESP32:** Cấu hình môi trường PlatformIO `firmware_mqtt` đồng bộ chuẩn topic `nhom01/node01/telemetry`, kết nối Broker mạng LAN `172.16.49.46`.
-4. **Trực quan hóa và Kiểm thử bền vững:** Xây dựng script vẽ biểu đồ `query_timerange.py`, script kiểm chứng restart tự động `restart_check.py` đạt kết quả khớp 100%, thực hiện thí nghiệm đo tải đồng thời `concurrent_load_selftest.py` với số liệu định lượng chi tiết.
+
