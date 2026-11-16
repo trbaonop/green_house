@@ -133,29 +133,7 @@ ORDER  BY ts ASC;
 * **Độ tương đồng:** Khớp chính xác 100% từng trường dữ liệu, mã định danh, `seq` và giá trị số đo (Chi tiết đối chiếu trong `log_before_restart.txt` và `log_after_restart.txt`).
 * **Cơ chế đảm bảo tính bền vững (Persistence):** Cơ sở dữ liệu SQLite được lưu trữ trực tiếp trên tập tin bền vững `greenhouse.db`. Chế độ ghi nhật ký trước `PRAGMA journal_mode = WAL` (Write-Ahead Logging) kết hợp với `PRAGMA synchronous = NORMAL` đảm bảo mỗi giao dịch (transaction) một khi đã commit sẽ được ghi an toàn xuống ổ đĩa vật lý, không bị thất thoát khi tiến trình đột ngột dừng hoặc khởi động lại.
 
----
 
-## 4.3 Thí nghiệm tải đồng thời
-
-* **Bài toán:** Kiểm tra xem khi có các truy vấn phân tích dữ liệu nặng (quét toàn bộ bảng, gom nhóm và tính giá trị trung bình) chạy liên tục, tiến trình ghi nhận dữ liệu mới từ MQTT vào cơ sở dữ liệu có bị nghẽn hoặc gia tăng độ trễ không.
-
-* **Truy vấn nặng thực hiện song song (mỗi 0.5s):**
-```sql
-SELECT device_id, COUNT(*) AS n, AVG(temp), AVG(hum), MIN(temp), MAX(temp)
-FROM   telemetry
-WHERE  valid = 1
-GROUP  BY device_id;
-```
-
-### Kết quả đo kiểm thực tế (`concurrent_load_result.txt`):
-
-| Chỉ số quan sát | Điều kiện chuẩn (Baseline - Không có query nặng) | Dưới tải đồng thời (Loaded - Query nặng lặp lại) | Chênh lệch (Delta) |
-| :--- | :--- | :--- | :--- |
-| **Số lần ghi (Write operations)** | 20 mẫu | 30 mẫu | — |
-| **Độ trễ ghi trung bình (Avg Write Latency)** | **2.688 ms** | **4.813 ms** | **+2.124 ms (+79.0%)** |
-| **Độ trễ ghi lớn nhất (Max Write Latency)** | 4.218 ms | 62.221 ms | +58.003 ms |
-| **Tần suất truy vấn nặng** | 0 | 60 lần / 30s | — |
-| **Độ trễ truy vấn nặng trung bình** | — | **0.27 ms** | — |
 
 * PS C:\Users\Admin\Documents\PlatformIO\Projects\highline> python query_timerange.py --device node01 --t0 1794298793 --t1 1794298912 --save chart.png
 
