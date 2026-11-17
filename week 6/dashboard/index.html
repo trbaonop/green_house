@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Giám sát nhà kính</title>
+<style>
+:root{--bg:#f1f5f9;--card:#fff;--tx:#0f172a;--mut:#64748b;--bd:#cbd5e1;--pri:#0284c7;--ok:#16a34a;--err:#dc2626;--warn:#ea580c}
+*{box-sizing:border-box}
+body{font-family:system-ui,-apple-system,sans-serif;margin:0;padding:16px;background:var(--bg);color:var(--tx)}
+.wrap{max-width:900px;margin:auto}
+h1{font-size:20px;margin:0;color:var(--pri)}
+h2{font-size:15px;margin:0 0 10px}
+.top{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;margin-bottom:12px}
+.card{background:var(--card);border:1px solid var(--bd);border-radius:12px;padding:16px;margin-bottom:16px;box-shadow:0 1px 4px rgba(0,0,0,.06)}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px}
+.lbl{font-size:11px;color:var(--mut);text-transform:uppercase;font-weight:700}
+.val{font-size:26px;font-weight:700;margin-top:2px}
+.val small{font-size:14px;color:var(--mut);font-weight:600}
+.sub{font-size:12px;color:var(--mut);margin-top:10px}
+.banner{padding:10px 12px;border-radius:8px;font-size:13px;font-weight:600;margin-bottom:12px;display:none}
+.banner.show{display:block}
+.b-stale{background:#ffedd5;color:var(--warn)}
+.b-none{background:#e2e8f0;color:#475569}
+.b-mqtt{background:#fee2e2;color:var(--err)}
+.btn{background:var(--pri);color:#fff;border:none;padding:9px 16px;border-radius:8px;font-weight:600;cursor:pointer;font-size:13px}
+.btn:hover{background:#0369a1}
+.btn.off{background:#475569}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+input{padding:8px 10px;border:1px solid var(--bd);border-radius:8px;font-size:13px}
+input[type=number]{width:80px}
+.row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.badge{display:inline-block;padding:3px 9px;border-radius:999px;font-size:11px;font-weight:700;white-space:nowrap}
+.s-pending{background:#e0f2fe;color:var(--pri)}
+.s-confirmed{background:#dcfce7;color:var(--ok)}
+.s-timeout{background:#ffedd5;color:var(--warn)}
+.s-rejected{background:#fee2e2;color:var(--err)}
+table{width:100%;border-collapse:collapse;font-size:12px}
+th,td{text-align:left;padding:6px 8px;border-bottom:1px solid #e2e8f0}
+th{color:var(--mut);text-transform:uppercase;font-size:11px}
+code{font-size:11px;color:var(--mut)}
+#msg{font-size:13px;margin-top:10px;min-height:18px}
+</style>
+</head>
+<body><div class="wrap">
+
+<div class="top">
+  <h1>🌱 Giám sát &amp; điều khiển nhà kính</h1>
+  <div class="row" id="authBox">
+    <input id="u" placeholder="Tài khoản" size="10">
+    <input id="p" type="password" placeholder="Mật khẩu" size="10">
+    <button class="btn" onclick="login()">Đăng nhập</button>
+  </div>
+  <div class="row" id="userBox" style="display:none">
+    <span id="who" style="font-size:13px"></span>
+    <button class="btn off" onclick="logout()">Đăng xuất</button>
+  </div>
+</div>
+
+<div id="bMqtt" class="banner b-mqtt">API chưa kết nối được MQTT broker.</div>
+
+<div class="card">
+  <h2>Số đo mới nhất</h2>
+  <div id="bState" class="banner"></div>
+  <div class="grid">
+    <div><div class="lbl">Nhiệt độ</div><div class="val" id="t">--</div></div>
+    <div><div class="lbl">Độ ẩm</div><div class="val" id="h">--</div></div>
+    <div><div class="lbl">Cảm biến mưa</div><div class="val" id="r">--</div></div>
+    <div><div class="lbl">Máy bơm</div><div class="val" id="pump">--</div></div>
+  </div>
+  <div class="sub" id="upd">Cập nhật lúc: --</div>
+</div>
+
+<div class="card">
+  <h2>Điều khiển máy bơm</h2>
+  <div class="row">
+    <label style="font-size:13px">Duty (%) <input id="duty" type="number" min="0" max="100" value="100"></label>
+    <button class="btn" id="bOn" onclick="send('pump_on')">Bật bơm</button>
+    <button class="btn off" id="bOff" onclick="send('pump_off')">Tắt bơm</button>
+  </div>
+  <div id="msg"></div>
+  <div class="sub">API trả 202 chỉ nghĩa là server đã nhận và gửi lệnh. Chỉ khi ack đúng node, đúng cmd_id mới hiện “Đã xác nhận”. Ẩn nút chỉ để tiện dùng, quyền được kiểm ở API.</div>
+</div>
+
+<div class="card">
+  <h2>Lịch sử lệnh</h2>
+  <table>
+    <thead><tr><th>Giờ</th><th>Lệnh</th><th>Người gửi</th><th>Trạng thái</th><th>cmd_id</th></tr></thead>
+    <tbody id="hist"><tr><td colspan="5">Chưa có lệnh.</td></tr></tbody>
+  </table>
+</div>
+
+</div>
+<script>
+const $ = id => document.getElementById(id);
+let token = sessionStorage.getItem('token') || '';
+let role = sessionStorage.getItem('role') || '';
+let user = sessionStorage.getItem('user') || '';
+
+const LABEL = {pending:'Đang chờ', confirmed:'Đã xác nhận', timeout:'Quá hạn', rejected:'Bị từ chối'};
+const ACT = {pump_on:'Bật bơm', pump_off:'Tắt bơm'};
+
+function esc(s){ return String(s ?? '').replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
+function badge(c){
+  let txt = LABEL[c.status] || c.status;
+  if (c.status === 'confirmed' && c.late) txt = 'Xác nhận muộn';
+  if (c.status === 'rejected' && c.reason) txt += ' (' + esc(c.reason) + ')';
+  return '<span class="badge s-' + c.status + '">' + txt + '</span>';
+}
+
+function renderAuth(){
+  const on = !!token;
+  $('authBox').style.display = on ? 'none' : 'flex';
+  $('userBox').style.display = on ? 'flex' : 'none';
+  $('who').textContent = on ? user + ' (' + role + ')' : '';
+  const can = on && role === 'operator';
+  $('bOn').disabled = !can; $('bOff').disabled = !can;
+  if (!on) $('msg').textContent = 'Đăng nhập để gửi lệnh.';
+  else if (!can) $('msg').textContent = 'Tài khoản chỉ có quyền xem.';
+  else $('msg').textContent = '';
+}
+
+async function login(){
+  const r = await fetch('/api/login', {method:'POST', headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({username:$('u').value, password:$('p').value})});
+  const d = await r.json();
+  if (!r.ok){ $('msg').textContent = 'Đăng nhập thất bại: ' + (d.error || r.status); return; }
+  token = d.token; role = d.role; user = d.user;
+  sessionStorage.setItem('token', token); sessionStorage.setItem('role', role); sessionStorage.setItem('user', user);
+  renderAuth();
+}
+function logout(){ sessionStorage.clear(); token = role = user = ''; renderAuth(); }
+
+async function refreshLatest(){
+  try{
+    const d = await (await fetch('/api/latest')).json();
+    $('bMqtt').classList.toggle('show', !d.mqtt_connected);
+    const b = $('bState');
+    if (!d.has_data){
+      b.className = 'banner show b-none'; b.textContent = 'Chưa nhận dữ liệu nào từ node.';
+      ['t','h','r','pump'].forEach(k => $(k).textContent = '--');
+      $('upd').textContent = 'Cập nhật lúc: --';
+      return;
+    }
+    if (d.stale){
+      b.className = 'banner show b-stale';
+      b.textContent = 'Chưa nhận dữ liệu mới / dữ liệu đã cũ (' + Math.round(d.age_s) + ' giây). Chưa đủ căn cứ kết luận thiết bị mất kết nối.';
+    } else { b.className = 'banner'; }
+    const dim = d.stale ? 'opacity:.4' : '';
+    const u = d.unit;
+    $('t').innerHTML = d.temp == null ? 'null' : d.temp + ' <small>' + u.temp + '</small>';
+    $('h').innerHTML = d.hum == null ? 'null' : d.hum + ' <small>' + u.hum + '</small>';
+    $('r').textContent = d.rain === 1 ? 'Có mưa' : d.rain === 0 ? 'Khô ráo' : 'Lỗi';
+    $('pump').innerHTML = d.pump + ' <small>% · ' + esc(d.fsm_state) + '</small>';
+    ['t','h','r','pump'].forEach(k => $(k).style.cssText = dim);
+    $('upd').textContent = 'Cập nhật lúc: ' + d.updated_at + ' · seq ' + d.seq + (d.valid ? '' : ' · dữ liệu không hợp lệ (valid=false)');
+  }catch(e){
+    $('bState').className = 'banner show b-stale';
+    $('bState').textContent = 'Không gọi được API: ' + e;
+  }
+}
+
+async function refreshHistory(){
+  try{
+    const list = await (await fetch('/api/commands')).json();
+    if (!list.length){ $('hist').innerHTML = '<tr><td colspan="5">Chưa có lệnh.</td></tr>'; return; }
+    $('hist').innerHTML = list.map(c =>
+      '<tr><td>' + c.sent_at + '</td><td>' + (ACT[c.action] || c.action) + (c.action === 'pump_on' ? ' ' + c.duty + '%' : '') +
+      '</td><td>' + esc(c.user) + '</td><td>' + badge(c) + '</td><td><code>' + esc(c.cmd_id.slice(0,8)) + '…</code></td></tr>').join('');
+  }catch(e){}
+}
+
+async function send(action){
+  $('msg').textContent = 'Đang gửi lệnh...';
+  const r = await fetch('/api/command', {method:'POST',
+    headers:{'Content-Type':'application/json', 'Authorization':'Bearer ' + token},
+    body: JSON.stringify({action, duty: parseInt($('duty').value || '100', 10)})});
+  const d = await r.json();
+  if (r.status === 401 || r.status === 403){
+    $('msg').innerHTML = '<span class="badge s-rejected">Bị từ chối</span> API trả ' + r.status + ', lệnh không được gửi xuống node.';
+    return;
+  }
+  if (!r.ok){ $('msg').textContent = 'Lỗi: ' + (d.error || r.status); return; }
+  $('msg').innerHTML = '<span class="badge s-pending">Đang chờ</span> Đã gửi, chờ ack từ node (chưa phải đã thực hiện). <code>' + d.cmd_id + '</code>';
+  pollCmd(d.cmd_id);
+  refreshHistory();
+}
+
+async function pollCmd(id){
+  for (let i = 0; i < 40; i++){
+    await new Promise(r => setTimeout(r, 500));
+    const c = await (await fetch('/api/command/' + id)).json();
+    if (c.status !== 'pending'){
+      let note = '';
+      if (c.status === 'confirmed') note = c.late ? ' Xác nhận muộn, không tự gửi lại lệnh.' : ' Node đã xác nhận (ack đúng cmd_id).';
+      if (c.status === 'timeout') note = ' Không nhận được ack: chưa xác nhận, không có nghĩa là thiết bị đã tắt hay thất bại.';
+      if (c.status === 'rejected') note = ' Node từ chối: ' + esc(c.reason || 'không rõ lý do');
+      $('msg').innerHTML = badge(c) + note;
+      refreshHistory();
+      return;
+    }
+  }
+}
+
+renderAuth();
+refreshLatest(); refreshHistory();
+setInterval(refreshLatest, 3000);
+setInterval(refreshHistory, 3000);
+</script>
+</body>
+</html>
