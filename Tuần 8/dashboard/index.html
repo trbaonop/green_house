@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Giám sát nhà kính</title>
+<style>
+:root{--bg:#f1f5f9;--card:#fff;--tx:#0f172a;--mut:#64748b;--bd:#cbd5e1;--pri:#0284c7;--ok:#16a34a;--err:#dc2626;--warn:#ea580c}
+*{box-sizing:border-box}body{font-family:system-ui,-apple-system,sans-serif;margin:0;padding:16px;background:var(--bg);color:var(--tx)}
+.wrap{max-width:950px;margin:auto}h1{font-size:20px;margin:0;color:var(--pri)}h2{font-size:15px;margin:0 0 10px}
+.top,.row{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px}.top{margin-bottom:12px}
+.card{background:var(--card);border:1px solid var(--bd);border-radius:12px;padding:16px;margin-bottom:16px;box-shadow:0 1px 4px #0001}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px}.lbl{font-size:11px;color:var(--mut);text-transform:uppercase;font-weight:700}
+.val{font-size:26px;font-weight:700;margin-top:2px}.val small{font-size:14px;color:var(--mut);font-weight:600}
+.sub{font-size:12px;color:var(--mut);margin-top:10px}.banner{padding:10px 12px;border-radius:8px;font-size:13px;font-weight:600;margin-bottom:12px;display:none}
+.banner.show{display:block}.b-stale{background:#ffedd5;color:var(--warn)}.b-none{background:#e2e8f0;color:#475569}.b-mqtt{background:#fee2e2;color:var(--err)}
+.btn{background:var(--pri);color:#fff;border:0;padding:9px 16px;border-radius:8px;font-weight:600;cursor:pointer;font-size:13px}.btn.off{background:#475569}.btn:disabled{opacity:.45;cursor:not-allowed}
+input,select{padding:8px 10px;border:1px solid var(--bd);border-radius:8px;font-size:13px}input[type=number]{width:85px}
+.badge{display:inline-block;padding:3px 9px;border-radius:999px;font-size:11px;font-weight:700}.s-pending{background:#e0f2fe;color:var(--pri)}.s-confirmed{background:#dcfce7;color:var(--ok)}.s-timeout{background:#ffedd5;color:var(--warn)}.s-rejected{background:#fee2e2;color:var(--err)}
+table{width:100%;border-collapse:collapse;font-size:12px}th,td{text-align:left;padding:7px 8px;border-bottom:1px solid #e2e8f0}th{color:var(--mut);font-size:11px}
+#msg{font-size:13px;margin-top:10px;min-height:18px}.hidden{display:none!important}
+</style></head>
+<body><div class="wrap">
+<div class="top"><h1>🌱 Giám sát &amp; điều khiển nhà kính</h1>
+<div class="row" id="authBox"><input id="u" placeholder="Tài khoản"><input id="p" type="password" placeholder="Mật khẩu"><button class="btn" onclick="login()">Đăng nhập</button></div>
+<div class="row hidden" id="userBox"><span id="who"></span><button class="btn off" onclick="logout()">Đăng xuất</button></div></div>
+<div id="bMqtt" class="banner b-mqtt">API chưa kết nối được MQTT TLS broker.</div>
+<div class="card"><h2>Số đo mới nhất</h2><div id="bState" class="banner"></div><div class="grid">
+<div><div class="lbl">Nhiệt độ</div><div class="val" id="t">--</div></div><div><div class="lbl">Độ ẩm</div><div class="val" id="h">--</div></div>
+<div><div class="lbl">Cảm biến mưa</div><div class="val" id="r">--</div></div><div><div class="lbl">Máy bơm</div><div class="val" id="pump">--</div></div></div><div class="sub" id="upd">Cập nhật lúc: --</div></div>
+<div class="card"><h2>Điều khiển máy bơm</h2><div class="row" style="justify-content:flex-start">
+<label>Duty (%) <input id="duty" type="number" min="0" max="100" value="100"></label><button class="btn" id="bOn" onclick="sendCmd('pump_on')" disabled>Bật bơm</button><button class="btn off" id="bOff" onclick="sendCmd('pump_off')" disabled>Tắt bơm</button></div>
+<div id="msg">Đăng nhập để sử dụng.</div><div class="sub">Lệnh chỉ được xác nhận khi nhận ACK đúng cmd_id từ node.</div></div>
+<div class="card"><h2>Lịch sử lệnh</h2><table><thead><tr><th>Giờ</th><th>Lệnh</th><th>Người gửi</th><th>Trạng thái</th><th>cmd_id</th></tr></thead><tbody id="hist"><tr><td colspan="5">Chưa có lệnh.</td></tr></tbody></table></div>
+<div class="card hidden" id="adminPanel"><h2>Quản trị hệ thống</h2><div class="row" style="justify-content:flex-start">
+<label>ACK timeout (s) <input id="ackTimeout" type="number" min="1" max="3600"></label><label>Command TTL (s) <input id="cmdTtl" type="number" min="1" max="3600"></label><label>Dữ liệu cũ (s) <input id="staleS" type="number" min="1" max="3600"></label><button class="btn" onclick="saveConfig()">Lưu cấu hình</button></div>
+<h2 style="margin-top:18px">Tạo tài khoản</h2><div class="row" style="justify-content:flex-start"><input id="newUser" placeholder="Tên tài khoản"><input id="newPass" type="password" placeholder="Mật khẩu (>=10 ký tự)"><select id="newRole"><option value="operator">Vận hành</option><option value="admin">Quản trị</option></select><button class="btn" onclick="createUser()">Tạo tài khoản</button></div>
+<h2 style="margin-top:18px">Danh sách tài khoản</h2><table><thead><tr><th>Tài khoản</th><th>Vai trò</th><th></th></tr></thead><tbody id="users"></tbody></table><div id="adminMsg" class="sub"></div></div>
+</div>
+<script>
+const $=id=>document.getElementById(id);let token=sessionStorage.getItem('token')||'',role=sessionStorage.getItem('role')||'',user=sessionStorage.getItem('user')||'';
+const LABEL={pending:'Đang chờ',confirmed:'Đã xác nhận',timeout:'Quá hạn',rejected:'Bị từ chối'},ACT={pump_on:'Bật bơm',pump_off:'Tắt bơm'};
+const headers=()=>({'Authorization':'Bearer '+token});
+async function api(path,opts={}){opts.headers={...(opts.headers||{}),...headers()};const r=await fetch(path,opts);let d={};try{d=await r.json()}catch{}if(r.status===401){logout(false)}return {r,d}}
+function renderAuth(){let on=!!token;$('authBox').classList.toggle('hidden',on);$('userBox').classList.toggle('hidden',!on);$('who').textContent=on?`${user} (${role==='admin'?'Quản trị':'Vận hành'})`:'';$('bOn').disabled=!on;$('bOff').disabled=!on;$('adminPanel').classList.toggle('hidden',role!=='admin');if(!on)$('msg').textContent='Đăng nhập để sử dụng.';if(role==='admin')loadAdmin()}
+async function login(){const {r,d}=await api('/api/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({username:$('u').value,password:$('p').value})});if(!r.ok){$('msg').textContent='Đăng nhập thất bại: '+(d.error||r.status);return}token=d.token;role=d.role;user=d.user;sessionStorage.setItem('token',token);sessionStorage.setItem('role',role);sessionStorage.setItem('user',user);renderAuth();refreshAll()}
+async function logout(callApi=true){if(callApi&&token){try{await fetch('/api/logout',{method:'POST',headers:headers()})}catch{}}token=role=user='';sessionStorage.clear();renderAuth();$('adminPanel').classList.add('hidden')}
+function badge(c){let s=LABEL[c.status]||c.status;if(c.status==='confirmed'&&c.late)s='Xác nhận muộn';return `<span class="badge s-${c.status}">${s}${c.reason&&c.status==='rejected'?' ('+esc(c.reason)+')':''}</span>`}
+function esc(s){return String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
+async function refreshLatest(){if(!token)return;try{const {r,d}=await api('/api/latest');if(!r.ok)return;$('bMqtt').classList.toggle('show',!d.mqtt_connected);let b=$('bState');if(!d.has_data){b.className='banner show b-none';b.textContent='Chưa nhận dữ liệu từ node.';['t','h','r','pump'].forEach(k=>$(k).textContent='--');return}
+if(d.stale){b.className='banner show b-stale';b.textContent=`Dữ liệu đã cũ (${Math.round(d.age_s)} giây).`}else b.className='banner';
+$('t').innerHTML=d.temp==null?'--':`${esc(d.temp)} <small>${esc(d.unit.temp)}</small>`;$('h').innerHTML=d.hum==null?'--':`${esc(d.hum)} <small>${esc(d.unit.hum)}</small>`;$('r').textContent=d.rain===1?'Có mưa':d.rain===0?'Khô ráo':'Lỗi';$('pump').innerHTML=`${esc(d.pump)} <small>% · ${esc(d.fsm_state)}</small>`;$('upd').textContent=`Cập nhật lúc: ${d.updated_at} · seq ${d.seq}${d.valid?'':' · valid=false'}`;}catch(e){$('bState').textContent='Không gọi được API.'}}
+async function refreshHistory(){if(!token)return;try{const {r,d}=await api('/api/commands');if(!r.ok)return;if(!d.length){$('hist').innerHTML='<tr><td colspan="5">Chưa có lệnh.</td></tr>';return}$('hist').innerHTML=d.map(c=>`<tr><td>${esc(c.sent_at)}</td><td>${ACT[c.action]||esc(c.action)} ${c.action==='pump_on'?esc(c.duty)+'%':''}</td><td>${esc(c.user)}</td><td>${badge(c)}</td><td><code>${esc(c.cmd_id.slice(0,8))}…</code></td></tr>`).join('')}catch{}}
+async function sendCmd(action){$('msg').textContent='Đang gửi lệnh...';const {r,d}=await api('/api/command',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action,duty:parseInt($('duty').value||'100',10)})});if(!r.ok){$('msg').textContent=`Không gửi được: ${d.error||r.status}`;return}$('msg').textContent='Đã gửi, đang chờ ACK. cmd_id: '+d.cmd_id;pollCmd(d.cmd_id);refreshHistory()}
+async function pollCmd(id){for(let i=0;i<40;i++){await new Promise(r=>setTimeout(r,500));const {r,d}=await api('/api/command/'+id);if(!r.ok)return;if(d.status!=='pending'){$('msg').textContent=LABEL[d.status]||d.status;refreshHistory();return}}}
+async function loadAdmin(){const [{d:c},{d:u}]=await Promise.all([api('/api/admin/config'),api('/api/admin/users')]);if(c.ack_timeout_s){$('ackTimeout').value=c.ack_timeout_s;$('cmdTtl').value=c.cmd_ttl_s;$('staleS').value=c.stale_s}$('users').innerHTML=(u||[]).map(x=>`<tr><td>${esc(x.username)}</td><td>${esc(x.role)}</td><td><button class="btn off" onclick="deleteUser('${encodeURIComponent(x.username)}')">Xóa</button></td></tr>`).join('')}
+async function saveConfig(){const {r,d}=await api('/api/admin/config',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({ack_timeout_s:$('ackTimeout').value,cmd_ttl_s:$('cmdTtl').value,stale_s:$('staleS').value})});$('adminMsg').textContent=r.ok?'Đã lưu cấu hình.':(d.error||'Lỗi lưu cấu hình');}
+async function createUser(){const {r,d}=await api('/api/admin/users',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({username:$('newUser').value,password:$('newPass').value,role:$('newRole').value})});$('adminMsg').textContent=r.ok?'Đã tạo tài khoản.':(d.error||'Không tạo được');if(r.ok){$('newUser').value=$('newPass').value='';loadAdmin()}}
+async function deleteUser(encoded){const name=decodeURIComponent(encoded);if(!confirm('Xóa tài khoản '+name+'?'))return;const {r,d}=await api('/api/admin/users/'+encodeURIComponent(name),{method:'DELETE'});$('adminMsg').textContent=r.ok?'Đã xóa tài khoản.':(d.error||'Không xóa được');if(r.ok)loadAdmin()}
+renderAuth();refreshAll();function refreshAll(){refreshLatest();refreshHistory()}setInterval(refreshAll,3000);
+</script></body></html>
